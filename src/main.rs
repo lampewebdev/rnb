@@ -28,15 +28,11 @@ enum Commands {
 }
 
 #[derive(Args)]
-struct InitArgs {
-    /// Path to the location where rnb stores all notes
-    #[arg(short, long, default_value = "~/.rnb")]
-    path: String,
-}
+struct InitArgs {}
 
 #[derive(Args)]
 struct AddArgs {
-    id: String,
+    id: i32,
 }
 
 #[derive(Args)]
@@ -45,19 +41,15 @@ struct EditArgs {
 }
 
 #[derive(Args)]
-struct ResetArgs {
-    /// Path to the location where rnb stores all notes
-    #[arg(short, long, default_value = "~/.rnb")]
-    path: String,
-}
+struct ResetArgs {}
 
 fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Init(init_args) => {
-            let path_string = get_path_string(&init_args.path);
-            let path = Path::new(&path_string);
+        Commands::Init(_) => {
+            let working_dir_string = get_working_dir_path();
+            let path = Path::new(&working_dir_string);
             init(path);
         }
         Commands::Add(add_args) => {
@@ -75,11 +67,24 @@ fn main() {
         Commands::Edit(id) => {
             println!("'myapp add' was used, name is: {:?}", id.id)
         }
-        Commands::Reset(reset_args) => {
-            let path_string = get_path_string(&reset_args.path);
-            let path = Path::new(&path_string);
+        Commands::Reset(_) => {
+            let working_dir_string = get_working_dir_path();
+            let path = Path::new(&working_dir_string);
             reset(path);
             init(path);
+        }
+    }
+}
+
+static DEFAULT_VALUE_DIR: &str = "~/.rnb";
+
+fn get_working_dir_path() -> OsString {
+    match env::var_os("RNB_DIR") {
+        Some(rnb_dir) => rnb_dir,
+        None => {
+            let mut default_dir = OsString::new();
+            default_dir.push(DEFAULT_VALUE_DIR);
+            default_dir
         }
     }
 }
