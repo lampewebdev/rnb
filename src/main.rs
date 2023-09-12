@@ -1,4 +1,4 @@
-use clap::{Args, Command, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use std::{
     env::{self},
     ffi::OsString,
@@ -6,6 +6,8 @@ use std::{
     path::Path,
     process::{self},
 };
+
+use colored::*;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None,propagate_version = true)]
@@ -74,15 +76,20 @@ fn reset(home_dir_path: &OsString) {
     let rc_path = Path::new(&home_dir_path).join(DEFAULT_RC_FILE);
 
     match remove_dir_all(&working_dir_path) {
-        Ok(_) => println!(
-            "The rnb folder under {:?} has been deleted",
-            &working_dir_path
-        ),
-        Err(err) => println!("Error while reseting, {:?}", err),
+        Ok(_) => {
+            println!(
+                "The rnb folder under {} has been deleted",
+                &working_dir_path.to_str().unwrap().red()
+            )
+        }
+        Err(err) => println!("Error while reseting, {}", err.to_string().red()),
     };
     match fs::remove_file(&rc_path) {
-        Ok(_) => println!("The rnb rc file under {:?} has been deleted", &rc_path),
-        Err(err) => println!("Error while reseting, {:?}", err),
+        Ok(_) => println!(
+            "The rnb rc file under {} has been deleted",
+            &rc_path.to_str().unwrap().red()
+        ),
+        Err(err) => println!("Error while reseting, {}", err.to_string().red()),
     };
 }
 
@@ -91,22 +98,28 @@ fn init(home_dir_path: &OsString) {
     let rc_path = Path::new(&home_dir_path).join(DEFAULT_RC_FILE);
 
     if working_dir_path.exists() {
-        eprintln!("working dir already excists");
+        eprintln!("{}", "working dir already excists".red());
         process::exit(1)
     };
+
     if rc_path.exists() {
-        eprintln!(".rnbrc file already excists");
+        eprintln!("{}", ".rnbrc file already excists".red());
         process::exit(1)
     };
+
     match std::fs::create_dir_all(&working_dir_path) {
-        Ok(_) => println!("Created working dir {:?}", &working_dir_path),
+        Ok(_) => println!(
+            "Created working dir {}",
+            &working_dir_path.to_str().unwrap().green()
+        ),
         Err(err) => {
-            eprintln!("{:?}", err);
+            eprintln!("{}", err.to_string().red());
             process::exit(1)
         }
     };
+
     match std::fs::File::create(&rc_path) {
-        Ok(_) => println!("Created rc file {:?}", &rc_path),
+        Ok(_) => println!("Created rc file {}", &rc_path.to_str().unwrap().green()),
         Err(err) => {
             eprintln!("{:?}", err);
             process::exit(1)
@@ -117,7 +130,7 @@ fn init(home_dir_path: &OsString) {
 fn get_editor_path() -> Option<OsString> {
     env::var_os("EDITOR").and_then(|e| {
         if e.is_empty() {
-            eprintln!("Can Not find Editor");
+            eprintln!("{}", "Can Not find Editor".red());
             process::exit(1)
         } else {
             Some(e)
